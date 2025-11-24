@@ -3,7 +3,14 @@
 ## State Space Representation
 
 We represent the state as an $N^2 \times 3$ matrix where each row contains the $(i, j, k)$ coordinates of one queen:
-$$\mathbf{s} = \begin{bmatrix} i_1 & j_1 & k_1 \\ i_2 & j_2 & k_2 \\ \vdots & \vdots & \vdots \\ i_{N^2} & j_{N^2} & k_{N^2} \end{bmatrix}$$
+```
+s = [
+[i1, j1, k1],
+[i2, j2, k2],
+...
+[i_{N^2}, j_{N^2}, k_{N^2}]
+]
+```
 
 where $i_m, j_m, k_m \in \{1, 2, \ldots, N\}$ for each queen $m$. This representation is chosen because it allows efficient position updates (change one row to move one queen) and fast conflict checking between any two queens (simple coordinate comparison).
 
