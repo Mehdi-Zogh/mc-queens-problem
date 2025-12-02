@@ -9,7 +9,10 @@ def attacks_each_other(pos1, pos2):
     """Check if two queens attack each other in 3D."""
     i1, j1, k1 = pos1
     i2, j2, k2 = pos2
-    
+
+    # Same position
+    if i1 == i2 and j1 == j2 and k1 == k2:
+        return True    
     # Plane attacks (exactly two coordinates match)
     if i1 == i2 and j1 == j2 and k1 != k2:
         return True
@@ -33,11 +36,12 @@ def attacks_each_other(pos1, pos2):
     return False
 
 
-def compute_energy(state):
+def compute_energy(state, verbose=False):
     """Compute total number of attacking pairs."""
     conflicts = 0
-    print("Computing energy of initial state...")
-    for m in tqdm(range(len(state))):
+    pbar = tqdm(range(len(state)), disable=not verbose, desc="Computing initial energy")
+
+    for m in pbar:
         for n in range(m + 1, len(state)):
             if attacks_each_other(state[m], state[n]):
                 conflicts += 1
@@ -66,6 +70,10 @@ def exponential_beta(iteration, beta_0=0.1, cooling_rate=1.001):
 def linear_beta(iteration, beta_0=0.1, t_max=10000):
     """β(t) = β₀ · (1 + t/t_max)"""
     return beta_0 * (1 + iteration / t_max)
+
+def constant_beta(iteration, beta_0=0.1):
+    """β(t) = β₀"""
+    return beta_0
 
 
 # ============================================================================
