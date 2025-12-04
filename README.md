@@ -37,8 +37,10 @@ project/
 ├── report.md             
 ├── src/
 │   ├── __init__.py       
-│   ├── mcmc.py           
-│   ├── utils.py          
-│   ├── visualization.py  
-│   └── experiments.ipynb 
+│   ├── acceptance.py           
+│   ├── energy.py          
+│   ├── experiments.ipynb
+│   ├── queens_game.py
+│   ├── schedules.py
+│   └── visualization.py
 ```
