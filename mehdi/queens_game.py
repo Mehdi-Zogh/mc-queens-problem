@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from tqdm.notebook import tqdm
-from src.schedules import choose_beta
-from src.acceptance import choose_acceptance
+from schedules import choose_beta
+from acceptance import choose_acceptance
 import numpy as np
 
 
