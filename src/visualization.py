@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+import numpy as np
 
 
 def visualize_results(result, board_size):
@@ -43,7 +45,6 @@ def visualize_results(result, board_size):
         f"Accepted Moves: {result.accepted_moves}\n"
         f"Acceptance Rate: {100*result.accepted_moves/len(result.energies):.1f}%\n"
         f"Initial Energy: {result.energies[0]}\n"
-        f"β Growth: {result.betas[-1]/result.betas[0]:.2f}x"
     )
     ax.text(0.1, 0.5, stats_text, fontsize=12, verticalalignment='center',
             family='monospace', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
