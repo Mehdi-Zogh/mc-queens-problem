@@ -23,6 +23,16 @@ The $3D$ $N^2$-Queens problem extends the classic $N$-Queens puzzle to $3$ dimen
 
 3. Visualize the results, which will automatically be displayed in a new window.
 
+## Test different configurations
+
+1. Run the code using desired parameters *(use `--help` for more information)*.
+
+    ```bash
+    python results/generate_results.py --board-sizes <board-sizes> --iterations <iterations> --runs <runs>
+    ```
+
+2. Visualize the results, which will automatically be saved in the `results/plots` directory.
+
 ## Approach
 
 This project uses MCMC with the following components:

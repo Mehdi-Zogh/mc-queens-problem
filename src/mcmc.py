@@ -48,7 +48,7 @@ def constant_beta(iteration, beta_0=0.1):
 # MAIN ALGORITHM
 # ============================================================================
 
-def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponential_beta, acceptance_func=_metropolis_hastings):
+def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponential_beta, acceptance_func=_metropolis_hastings, verbose=False):
     """Run MCMC chain for the 3D N^2-Queens problem."""
     
     state = QueenState(board_size=board_size)
@@ -59,7 +59,7 @@ def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponentia
     betas = []
     accepted_moves = 0
     
-    pbar = tqdm(range(num_iterations), desc="MCMC Iterations", leave=True)
+    pbar = tqdm(range(num_iterations), desc="MCMC Iterations", leave=True, disable=not verbose)
     for it in pbar:
         beta = beta_func(it)
         betas.append(beta)
@@ -79,18 +79,18 @@ def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponentia
         queens_positions.append(state.queens.copy())
         energies.append(energy)
         
-        if energy <= target_energy:
+        if energy <= target_energy and verbose:
             pbar.write(f"✓ Solution found at iteration {it} with energy {energy}")
             break
         
-        if it + 1000 == 0:
+        if it + 1000 == 0 and verbose:
             acceptance_rate = 100 * accepted_moves / (it + 1)
             pbar.write(
                 f"Iteration {it + 1}: Energy={energy}, β={beta:.4f}, "
                 f"Acceptance rate={acceptance_rate:.1f}%"
             )
             
-    if energy > target_energy:
+    if energy > target_energy and verbose:
         pbar.write(f"✗ Stopped at iteration {num_iterations} with energy {energy}")
         
     return queens_positions, energies, betas, accepted_moves
