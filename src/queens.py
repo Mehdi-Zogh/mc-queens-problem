@@ -4,7 +4,6 @@ Definition of a state of the 3D N^2-Queens problem.
 
 import numpy as np
 from collections import defaultdict
-from tqdm import tqdm
 
 # ============================================================================
 # QUEEN STATE
@@ -31,6 +30,7 @@ class QueenState:
                     queens.append(pos)
                     break    
         self.queens = queens
+        self.occupied = occupied 
         self.board_size = board_size
         
         self.xy_planes = defaultdict(int)
@@ -67,9 +67,10 @@ class QueenState:
         """
         old_pos = self.queens[queen_index]
         self._update_state(old_pos, -1)
+        self.occupied.remove(old_pos)
         self.queens[queen_index] = new_pos
         self._update_state(new_pos, 1)
-        
+        self.occupied.add(new_pos)
         
     def new_queen_position(self):
         """
@@ -78,10 +79,9 @@ class QueenState:
         queen_idx = np.random.randint(0, len(self.queens))
         while True:
             new_pos = tuple(np.random.randint(1, self.board_size + 1) for _ in range(3))
-            if all(self.queens[i] != new_pos for i in range(len(self.queens)) if i != queen_idx):
-                break
-
-        return queen_idx, new_pos
+            if new_pos in self.occupied:
+                continue
+            return queen_idx, new_pos
     
     def _update_state(self, pos, delta):
         """
@@ -126,6 +126,5 @@ class QueenState:
             (self.space_diagonals[2][(x + y, x - z)] - 1) +
             (self.space_diagonals[3][(x + y, x + z)] - 1)
         )
-        
         return attacks
     

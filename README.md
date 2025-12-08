@@ -11,18 +11,17 @@ The $3D$ $N^2$-Queens problem extends the classic $N$-Queens puzzle to $3$ dimen
 1. Create a python environment and install required packages.
 
     ```bash
-    conda create -n queens python=3.10
-    conda activate queens
+    conda create -n queens python=3.10 && conda activate queens
     pip install -r requirements.txt
     ```
 
-2. We developped two different approaches to compute the **energy** of a given state (see below).
-    - For $O(N^4)$ energy computation, go into `mehdi/` folder and run notebook `experiments.ipynb`.
-    - For $O(N^2)$ energy computation, go into `jean/` folder and run the following command.
+2. Run the code using desired parameters *(use `--help` for more information)*.
 
-        ```bash
-        python mcmc.py --num_iterations <num-iterations> --board-size <board-size>
-        ```
+    ```bash
+    python src/mcmc.py --num_iterations <num-iterations> --board-size <board-size> --beta_func <beta-func> --acceptance_func <acceptance-func>
+    ```
+
+3. Visualize the results, which will automatically be displayed in a new window.
 
 ## Approach
 
@@ -72,9 +71,7 @@ $$E(\mathbf{s}) = \sum_{m=1}^{N^2} \sum_{n=m+1}^{N^2} \mathbf{1}[\text{queens } 
 
 This function directly measures constraint violations. The energy landscape is smooth, meaning incremental moves tend to produce gradual energy changes rather than sudden jumps, which aids the MCMC algorithm in finding minima.
 
-For MCMC efficiency, transition between a state to the next involves moving a **single** queen to a new **unoccupied** position. This allows computation of delta energy in $O(N²)$ instead of $O(N⁴)$ pairs.
-
-$$E_{\text{new}} - E_{\text{old}} = (\text{conflicts involving queen } m \text{ at new position}) - (\text{conflicts involving queen } m \text{ at old position})$$
+For MCMC efficiency, energy computation is optimized by using several hash maps to store the number of queens attacking each plane, face diagonal and space diagonal. This allows computation of initial energy in $O(N^2)$, which is the number of queens, instead of $O(N^4)$ pairs. Also, this allows computation of delta energy in $O(1)$ instead of $O(N^2)$ pairs, since a transition between two states involves moving a **single** queen to a new **unoccupied** position.
 
 #### Metropolis-Hastings Algorithm
 
