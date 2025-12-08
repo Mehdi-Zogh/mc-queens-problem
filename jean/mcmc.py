@@ -40,7 +40,12 @@ def linear_beta(iteration, beta_0=0.1, t_max=10000):
 def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponential_beta):
     """Run MCMC chain for the 3D N^2-Queens problem."""
     
+    import time
+    start_time = time.time()
     state = QueenState(board_size)
+    end_time = time.time()
+    print(f"Time taken to initialize state: {end_time - start_time} seconds")
+
     energy = state.initial_energy
     
     queens_positions = [state.queens.copy()]
@@ -54,16 +59,7 @@ def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponentia
         betas.append(beta)
         
         # move random queen to random unoccupied position
-        queen_idx = np.random.randint(0, len(state.queens))
-        occupied = set(state.queens)
-        unoccupied = [
-            (x, y, z)
-            for x in range(1, board_size + 1)
-            for y in range(1, board_size + 1)
-            for z in range(1, board_size + 1)
-            if (x, y, z) not in occupied
-        ]            
-        new_pos = tuple(unoccupied[np.random.randint(0, len(unoccupied))])
+        queen_idx, new_pos = state.new_queen_position()
         
         # compute energy change
         delta_energy = state.compute_delta_energy(queen_idx, new_pos)

@@ -31,6 +31,7 @@ class QueenState:
                     queens.append(pos)
                     break    
         self.queens = queens
+        self.board_size = board_size
         
         self.xy_planes = defaultdict(int)
         self.xz_planes = defaultdict(int)
@@ -68,6 +69,19 @@ class QueenState:
         self._update_state(old_pos, -1)
         self.queens[queen_index] = new_pos
         self._update_state(new_pos, 1)
+        
+        
+    def new_queen_position(self):
+        """
+        Generate a new position for a queen ensuring it's not occupied by another queen.
+        """
+        queen_idx = np.random.randint(0, len(self.queens))
+        while True:
+            new_pos = tuple(np.random.randint(1, self.board_size + 1) for _ in range(3))
+            if all(self.queens[i] != new_pos for i in range(len(self.queens)) if i != queen_idx):
+                break
+
+        return queen_idx, new_pos
     
     def _update_state(self, pos, delta):
         """
