@@ -15,23 +15,19 @@ The $3D$ $N^2$-Queens problem extends the classic $N$-Queens puzzle to $3$ dimen
     pip install -r requirements.txt
     ```
 
-2. Run the code using desired parameters *(use `--help` for more information)*.
+2. There are two different ways to run the code.
+
+    - Run the code for a single configuration (board size, number of iterations, beta function, acceptance function).
 
     ```bash
     python src/mcmc.py --num_iterations <num-iterations> --board-size <board-size> --beta_func <beta-func> --acceptance_func <acceptance-func>
     ```
 
-3. Visualize the results, which will automatically be displayed in a new window.
-
-## Test different configurations
-
-1. Run the code using desired parameters *(use `--help` for more information)*.
+    - Get general results of our work comparing several configurations for given board sizes and number of iterations. *(Use `--help` to see all available options)*.
 
     ```bash
-    python results/generate_results.py --board-sizes <board-sizes> --iterations <iterations> --runs <runs>
+    python src/results.py --board-sizes <space-separated-board-sizes> --num-iterations <num-iterations>
     ```
-
-2. Visualize the results, which will automatically be saved in the `results/plots` directory.
 
 ## Approach
 

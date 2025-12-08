@@ -1,12 +1,14 @@
+# Testing results
+results/*.png
+
+# macOS
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
 
-# Testing results
-results/plots/
-
-.DS_Store
 # C extensions
 *.so
 
