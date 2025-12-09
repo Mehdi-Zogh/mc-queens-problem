@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D N²-Queens MCMC Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .menu-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        
+        .start-btn {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+            white-space: nowrap;
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.6);
+            background: linear-gradient(135deg, #5cbf60 0%, #55b059 100%);
+        }
+        
+        .start-btn:active {
+            transform: translateY(0);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal {
+            background: rgba(20, 20, 30, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-header h2 {
+            color: #4caf50;
+            font-size: 1.5em;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+        
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        
+        .modal-form-group input,
+        .modal-form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 0.95em;
+        }
+        
+        .modal-form-group input:focus,
+        .modal-form-group select:focus {
+            outline: none;
+            border-color: #4caf50;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .modal-form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #888;
+            font-size: 0.85em;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .modal-actions .btn {
+            flex: 1;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.5);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        
+        .btn-stop:hover {
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+        
+        .status-display {
+            position: absolute;
+            top: 80px;
+            right: 30px;
+            padding: 12px 20px;
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #4caf50;
+            min-width: 250px;
+            max-width: 400px;
+            display: none;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-display.show {
+            display: block;
+        }
+        
+        .main-content {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 60px);
+        }
+        
+        .visualization {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+        }
+        
+        .energy-slider {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 450px;
+            height: 350px;
+            background: rgba(20, 20, 30, 0.98);
+            border: 2px solid rgba(76, 175, 80, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            transform: translateY(calc(100% - 50px));
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        
+        .energy-slider.open {
+            transform: translateY(0);
+        }
+        
+        .energy-slider-handle {
+            height: 50px;
+            background: rgba(76, 175, 80, 0.2);
+            border-bottom: 1px solid rgba(76, 175, 80, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .energy-slider-handle:hover {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .energy-slider-handle::before {
+            content: '▼';
+            color: #4caf50;
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        
+        .energy-slider.open .energy-slider-handle::before {
+            transform: rotate(180deg);
+        }
+        
+        .energy-slider-handle span {
+            color: #4caf50;
+            font-weight: 600;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+        
+        .energy-chart-container {
+            height: calc(100% - 50px);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .energy-chart-container h3 {
+            color: #4caf50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .energy-chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 200px;
+        }
+        
+        #energy-chart {
+            position: relative;
+            z-index: 1001;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .stats {
+            position: absolute;
+            top: 80px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 100;
+        }
+        
+        .stats.show {
+            display: block;
+        }
+        
+        .slice-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(20, 20, 30, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 250px;
+            z-index: 100;
+        }
+        
+        .slice-controls h3 {
+            margin-bottom: 15px;
+            font-size: 1em;
+            color: #4caf50;
+        }
+        
+        .slice-controls .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .slice-controls label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        
+        .slice-controls input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .slice-controls select,
+        .slice-controls input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+        }
+        
+        .slice-controls input[type="range"] {
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-bar {
+                padding: 10px 15px;
+                gap: 10px;
+            }
+            
+            .menu-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .menu-group input,
+            .menu-group select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-bar">
+        <div class="menu-title">3D N²-Queens MCMC</div>
+        <button class="start-btn" id="open-modal-btn">Start MCMC Simulation</button>
+        </div>
+        
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>MCMC Parameters</h2>
+                <button class="close-btn" id="close-modal-btn">&times;</button>
+            </div>
+            
+            <form id="mcmc-form">
+                <div class="modal-form-group">
+                    <label for="mcmc-board-size">Board Size (N):</label>
+                    <input type="number" id="mcmc-board-size" min="2" value="3" required>
+                        <small>Size of one dimension (N×N×N cube)</small>
+                    </div>
+                    
+                <div class="modal-form-group">
+                    <label for="mcmc-iterations">Number of Iterations:</label>
+                    <input type="number" id="mcmc-iterations" min="1000" max="1000000" value="10000" step="1000" required>
+                    <small>Total number of MCMC iterations to run</small>
+                    </div>
+                    
+                <div class="modal-form-group">
+                    <label for="mcmc-beta">Beta Function (Temperature Schedule):</label>
+                    <select id="mcmc-beta" required>
+                        <option value="exponential">Exponential</option>
+                        <option value="linear">Linear</option>
+                        <option value="constant">Constant</option>
+                    </select>
+                    <small>Controls how temperature changes over time</small>
+                </div>
+                
+                <div class="modal-form-group">
+                    <label for="mcmc-acceptance">Acceptance Function:</label>
+                    <select id="mcmc-acceptance" required>
+                        <option value="metropolis">Metropolis-Hastings</option>
+                        <option value="greedy">Greedy</option>
+                    </select>
+                    <small>Strategy for accepting or rejecting moves</small>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-stop" id="close-modal-btn-2" style="background: linear-gradient(135deg, #666 0%, #555 100%);">Cancel</button>
+                    <button type="submit" class="btn" id="run-mcmc-btn">Start Simulation</button>
+                </div>
+                </form>
+        </div>
+    </div>
+    
+    <div class="status-display" id="mcmc-status">
+        <div id="mcmc-status-text"></div>
+    </div>
+    
+    <button type="button" class="btn btn-stop" id="stop-mcmc-btn" style="position: absolute; top: 80px; right: 30px; display: none; z-index: 100;">Stop MCMC</button>
+    
+    <div class="main-content">
+        <div class="visualization">
+            <div id="canvas-container"></div>
+            <div class="stats" id="stats"></div>
+        
+        <div class="slice-controls">
+            <h3>Slice Mode</h3>
+            <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="slice-enabled" style="margin-right: 8px;">
+                            Enable Slice Mode
+                        </label>
+                    </div>
+            <div class="form-group">
+                <label for="slice-plane">Plane:</label>
+                <select id="slice-plane">
+                            <option value="XY">XY Plane (slice along Z)</option>
+                            <option value="XZ">XZ Plane (slice along Y)</option>
+                            <option value="YZ">YZ Plane (slice along X)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                <label for="slice-position">
+                            Position: <span id="slice-position-value">0</span>
+                        </label>
+                <input type="range" id="slice-position" min="0" max="14" value="0" step="1" disabled>
+                    </div>
+                </div>
+                
+            </div>
+            
+    <div class="energy-slider" id="energy-slider">
+        <div class="energy-slider-handle" id="energy-slider-handle">
+            <span>Energy Chart</span>
+        </div>
+        <div class="energy-chart-container">
+            <h3>Energy Over Time</h3>
+            <div class="energy-chart-wrapper">
+                <canvas id="energy-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let scene, camera, renderer, controls;
+        let cellMeshes = [];
+        let queenMeshes = [];
+        let attackLines = [];
+        let gridLines = [];
+        let raycaster, mouse;
+        let currentData = null;
+        let originalCellMaterials = [];
+        let cellDataMap = new Map();
+        let hoveredQueenIndex = null;
+        let updateQueue = [];
+        let isUpdating = false;
+        let lastUpdateTime = 0;
+        const UPDATE_THROTTLE_MS = 100; // Limiter à 10 mises à jour par seconde max (ralenti d'un facteur 2 par rapport à avant)
+        let sliceMode = {
+            enabled: false,
+            plane: 'XY',
+            position: 0,
+            offset: 4.0  // Augmenté de 2.0 à 4.0 pour plus d'espace entre les plans
+        };
+        let originalPositions = new Map();
+        
+        // MCMC streaming connection
+        let mcmcAbortController = null;
+        
+        // Energy chart
+        let energyChart = null;
+        let energyData = {
+            iterations: [],
+            energies: []
+        };
+        let isComputing = false;
+        
+        // Initialize Three.js scene
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            // Position initiale sera ajustée lors du rendu
+            camera.position.set(3, 3, 3);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            // Raycaster for hover detection
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            // Mouse leave handler
+            renderer.domElement.addEventListener('mouseleave', onMouseLeave);
+            
+            // Simple orbit controls
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+                    
+                    const spherical = new THREE.Spherical();
+                    spherical.setFromVector3(camera.position);
+                    spherical.theta -= deltaX * 0.01;  // Rotation horizontale : glisser droite = tourner droite
+                    spherical.phi -= deltaY * 0.01;     // Rotation verticale : glisser haut = regarder haut
+                    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+                    
+                    camera.position.setFromSpherical(spherical);
+                    camera.lookAt(0, 0, 0);
+                    
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                } else {
+                    onMouseMove(e);
+                }
+            });
+            
+            renderer.domElement.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            let minZoomDistance = 1;
+            let maxZoomDistance = 20;
+            
+            renderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const distance = camera.position.length();
+                const newDistance = distance + e.deltaY * 0.01;
+                if (newDistance > minZoomDistance && newDistance < maxZoomDistance) {
+                    camera.position.normalize().multiplyScalar(newDistance);
+                }
+            });
+            
+            // Fonction pour mettre à jour les limites de zoom
+            window.updateZoomLimits = function(minDist, maxDist) {
+                minZoomDistance = minDist;
+                maxZoomDistance = maxDist;
+            };
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            animate();
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        
+        function clearScene() {
+            cellMeshes.forEach(mesh => scene.remove(mesh));
+            queenMeshes.forEach(mesh => scene.remove(mesh));
+            attackLines.forEach(line => scene.remove(line));
+            gridLines.forEach(line => scene.remove(line));
+            
+            cellMeshes = [];
+            queenMeshes = [];
+            attackLines = [];
+            gridLines = [];
+            originalPositions.clear();
+        }
+        
+        function renderEmptyCube(n) {
+            clearScene();
+            
+            const cells = [];
+            for (let x = 0; x < n; x++) {
+                for (let y = 0; y < n; y++) {
+                    for (let z = 0; z < n; z++) {
+                        cells.push({ x, y, z, type: 'safe' });
+                    }
+                }
+            }
+            
+            const gridLines = [];
+            for (let y = 0; y <= n; y++) {
+                for (let z = 0; z <= n; z++) {
+                    gridLines.push({ from: [0, y, z], to: [n, y, z] });
+                }
+            }
+            for (let x = 0; x <= n; x++) {
+                for (let z = 0; z <= n; z++) {
+                    gridLines.push({ from: [x, 0, z], to: [x, n, z] });
+                }
+            }
+            for (let x = 0; x <= n; x++) {
+                for (let y = 0; y <= n; y++) {
+                    gridLines.push({ from: [x, y, 0], to: [x, y, n] });
+                }
+            }
+            
+            renderVisualization({
+                n: n,
+                cells: cells,
+                queens: [],
+                attacks: [],
+                grid_lines: gridLines,
+                attack_count: 0
+            });
+        }
+        
+        function getCellsAttackedByQueen(queen, n) {
+            const attacked = new Set();
+            const [qx, qy, qz] = [queen.x, queen.y, queen.z];
+            
+            const directions = [
+                [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1],
+                [1, 1, 0], [1, -1, 0], [-1, 1, 0], [-1, -1, 0],
+                [1, 0, 1], [1, 0, -1], [-1, 0, 1], [-1, 0, -1],
+                [0, 1, 1], [0, 1, -1], [0, -1, 1], [0, -1, -1],
+                [1, 1, 1], [1, 1, -1], [1, -1, 1], [1, -1, -1],
+                [-1, 1, 1], [-1, 1, -1], [-1, -1, 1], [-1, -1, -1]
+            ];
+            
+            for (const [dx, dy, dz] of directions) {
+                for (let step = 1; step < n; step++) {
+                    const x = qx + dx * step;
+                    const y = qy + dy * step;
+                    const z = qz + dz * step;
+                    if (x >= 0 && x < n && y >= 0 && y < n && z >= 0 && z < n) {
+                        attacked.add(`${x},${y},${z}`);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            return attacked;
+        }
+        
+        function highlightQueenAttacks(queenIndex) {
+            if (!currentData || queenIndex === null || queenIndex < 0 || queenIndex >= currentData.queens.length) {
+                return;
+            }
+            
+            const queen = currentData.queens[queenIndex];
+            const n = currentData.n;
+            const attackedCells = getCellsAttackedByQueen(queen, n);
+            const queenCellKey = `${queen.x},${queen.y},${queen.z}`;
+            
+            const attackedQueenIndices = new Set();
+            currentData.queens.forEach((otherQueen, index) => {
+                if (index !== queenIndex) {
+                    const otherQueenKey = `${otherQueen.x},${otherQueen.y},${otherQueen.z}`;
+                    if (attackedCells.has(otherQueenKey)) {
+                        attackedQueenIndices.add(index);
+                    }
+                }
+            });
+            
+            cellDataMap.forEach((data, key) => {
+                const { mesh, originalMaterial, cell } = data;
+                if (key === queenCellKey) {
+                    mesh.material = originalMaterial.clone();
+                } else if (attackedCells.has(key)) {
+                    let isAttackedQueenCell = false;
+                    currentData.queens.forEach((otherQueen, index) => {
+                        if (index !== queenIndex) {
+                            const otherQueenKey = `${otherQueen.x},${otherQueen.y},${otherQueen.z}`;
+                            if (key === otherQueenKey && attackedQueenIndices.has(index)) {
+                                isAttackedQueenCell = true;
+                            }
+                        }
+                    });
+                    
+                    if (isAttackedQueenCell) {
+                        mesh.material = new THREE.MeshPhongMaterial({
+                            color: 0xff0000,
+                            transparent: true,
+                            opacity: 0.5
+                        });
+                    } else {
+                        mesh.material = originalMaterial.clone();
+                    }
+                } else {
+                    mesh.material = new THREE.MeshPhongMaterial({
+                        color: 0xffffff,
+                        transparent: true,
+                        opacity: 0.1
+                    });
+                }
+            });
+            
+            queenMeshes.forEach((mesh, index) => {
+                if (index === queenIndex) {
+                    mesh.visible = true;
+                    mesh.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            const isGem = child.geometry instanceof THREE.SphereGeometry;
+                            child.material = new THREE.MeshPhongMaterial({
+                                color: isGem ? 0xffcc00 : 0xffd700,
+                                shininess: 200,
+                                emissive: isGem ? 0x664400 : 0x554400,
+                                specular: isGem ? 0xffff00 : 0xffaa00
+                            });
+                        }
+                    });
+                } else if (attackedQueenIndices.has(index)) {
+                    mesh.visible = true;
+                    const queenBaseMaterial = new THREE.MeshPhongMaterial({
+                        color: 0xffd700,
+                        shininess: 150,
+                        emissive: 0x332200,
+                        specular: 0xffaa00
+                    });
+                    const queenGemMaterial = new THREE.MeshPhongMaterial({
+                        color: 0xffaa00,
+                        shininess: 200,
+                        emissive: 0x442200,
+                        specular: 0xffff00
+                    });
+                    mesh.traverse((child) => {
+                        if (child instanceof THREE.Mesh) {
+                            const isGem = child.geometry instanceof THREE.SphereGeometry;
+                            child.material = (isGem ? queenGemMaterial : queenBaseMaterial).clone();
+                        }
+                    });
+                } else {
+                    mesh.visible = false;
+                }
+            });
+        }
+        
+        function restoreOriginalColors() {
+            cellDataMap.forEach((data) => {
+                const { mesh, originalMaterial } = data;
+                mesh.material = originalMaterial.clone();
+            });
+            
+            const queenBaseMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffd700,
+                shininess: 150,
+                emissive: 0x332200,
+                specular: 0xffaa00
+            });
+            const queenGemMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffaa00,
+                shininess: 200,
+                emissive: 0x442200,
+                specular: 0xffff00
+            });
+            queenMeshes.forEach(mesh => {
+                mesh.visible = true;
+                mesh.traverse((child) => {
+                    if (child instanceof THREE.Mesh) {
+                        const isGem = child.geometry instanceof THREE.SphereGeometry;
+                        child.material = (isGem ? queenGemMaterial : queenBaseMaterial).clone();
+                    }
+                });
+            });
+        }
+        
+        function onMouseMove(event) {
+            if (!currentData || queenMeshes.length === 0) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const allQueenMeshes = [];
+            queenMeshes.forEach(crown => {
+                crown.traverse((child) => {
+                    if (child instanceof THREE.Mesh) {
+                        allQueenMeshes.push(child);
+                    }
+                });
+            });
+            const intersects = raycaster.intersectObjects(allQueenMeshes);
+            
+            if (intersects.length > 0) {
+                const intersectedMesh = intersects[0].object;
+                let queenIndex = -1;
+                for (let i = 0; i < queenMeshes.length; i++) {
+                    let found = false;
+                    queenMeshes[i].traverse((child) => {
+                        if (child === intersectedMesh) {
+                            found = true;
+                        }
+                    });
+                    if (found) {
+                        queenIndex = i;
+                        break;
+                    }
+                }
+                
+                if (queenIndex !== -1 && queenIndex !== hoveredQueenIndex) {
+                    hoveredQueenIndex = queenIndex;
+                    highlightQueenAttacks(queenIndex);
+                }
+            } else {
+                if (hoveredQueenIndex !== null) {
+                    hoveredQueenIndex = null;
+                    restoreOriginalColors();
+                }
+            }
+        }
+        
+        function onMouseLeave() {
+            if (hoveredQueenIndex !== null) {
+                hoveredQueenIndex = null;
+                restoreOriginalColors();
+            }
+        }
+        
+        function updateQueensOnly(newQueens, n) {
+            // Mise à jour optimisée : seulement les positions des reines
+            if (!currentData || queenMeshes.length === 0) {
+                return false; // Nécessite un rendu complet
+            }
+            
+            // Vérifier si le nombre de reines correspond et que n est le même
+            if (newQueens.length !== queenMeshes.length || currentData.n !== n) {
+                return false; // Nécessite un rendu complet
+            }
+            
+            // Mettre à jour les positions des reines
+            newQueens.forEach((queen, index) => {
+                if (index < queenMeshes.length) {
+                    const crown = queenMeshes[index];
+                    const baseX = queen.x + 0.5 - n/2;
+                    const baseY = queen.y + 0.5 - n/2 - 0.15;
+                    const baseZ = queen.z + 0.5 - n/2;
+                    
+                    crown.position.set(baseX, baseY, baseZ);
+                    
+                    // Mettre à jour originalPositions pour le slice mode
+                    originalPositions.set(crown, { 
+                        x: baseX, 
+                        y: baseY, 
+                        z: baseZ,
+                        cellX: queen.x,
+                        cellY: queen.y,
+                        cellZ: queen.z
+                    });
+                }
+            });
+            
+            // Mettre à jour currentData pour garder la cohérence
+            currentData.queens = newQueens;
+            
+            // Réappliquer le slice si activé
+            if (sliceMode.enabled) {
+                applySlice();
+            }
+            
+            return true; // Mise à jour réussie
+        }
+        
+        function renderVisualization(data) {
+            clearScene();
+            currentData = data;
+            cellDataMap.clear();
+            hoveredQueenIndex = null;
+            
+            const n = data.n;
+            const cells = data.cells;
+            const queens = data.queens;
+            const attacks = data.attacks;
+            const gridLinesData = data.grid_lines;
+            
+            const uniqueAttacks = Math.floor(data.attack_count / 2);
+            document.getElementById('stats').innerHTML = `
+                <strong>N = ${n}</strong><br>
+                Queens: ${queens.length}<br>
+                Attacks: ${uniqueAttacks}
+            `;
+            document.getElementById('stats').classList.add('show');
+            
+            const cellSize = 0.9;
+            const cellGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+            
+            cells.forEach(cell => {
+                let material;
+                const isWhiteCell = (cell.x + cell.y + cell.z) % 2 === 0;
+                
+                if (cell.type === 'queen') {
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0xffffff, 
+                        transparent: true, 
+                        opacity: 0.15 
+                    });
+                } else if (cell.type === 'attacked') {
+                    // Pendant le calcul, ne pas afficher les cellules attaquées en rouge
+                    // Les afficher comme des cellules safe pour voir seulement les reines bouger
+                    if (isComputing) {
+                        material = new THREE.MeshPhongMaterial({ 
+                            color: 0xffffff, 
+                            transparent: true, 
+                            opacity: 0.1  // Très transparent pour ne pas distraire
+                        });
+                    } else {
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0xff0000, 
+                        transparent: true, 
+                        opacity: 0.5 
+                    });
+                    }
+                } else {
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: 0xffffff, 
+                        transparent: true, 
+                        opacity: 0.6 
+                    });
+                }
+                
+                const mesh = new THREE.Mesh(cellGeometry, material);
+                const baseX = cell.x + 0.5 - n/2;
+                const baseY = cell.y + 0.5 - n/2;
+                const baseZ = cell.z + 0.5 - n/2;
+                mesh.position.set(baseX, baseY, baseZ);
+                scene.add(mesh);
+                cellMeshes.push(mesh);
+                
+                const cellKey = `${cell.x},${cell.y},${cell.z}`;
+                cellDataMap.set(cellKey, {
+                    mesh: mesh,
+                    originalMaterial: material.clone(),
+                    cell: cell,
+                    isWhiteCell: isWhiteCell,
+                    originalPosition: { x: baseX, y: baseY, z: baseZ }
+                });
+                originalPositions.set(mesh, { 
+                    x: baseX, 
+                    y: baseY, 
+                    z: baseZ,
+                    cellX: cell.x,
+                    cellY: cell.y,
+                    cellZ: cell.z
+                });
+            });
+            
+            const queenBaseMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffd700,
+                shininess: 150,
+                emissive: 0x332200,
+                specular: 0xffaa00
+            });
+            
+            const queenGemMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffaa00,
+                shininess: 200,
+                emissive: 0x442200,
+                specular: 0xffff00
+            });
+            
+            function createCrownMesh() {
+                const crownGroup = new THREE.Group();
+                
+                const baseGeometry = new THREE.CylinderGeometry(0.28, 0.32, 0.12, 16);
+                const base = new THREE.Mesh(baseGeometry, queenBaseMaterial.clone());
+                base.position.y = 0.06;
+                crownGroup.add(base);
+                
+                const bandGeometry = new THREE.TorusGeometry(0.30, 0.02, 8, 16);
+                const band = new THREE.Mesh(bandGeometry, queenGemMaterial.clone());
+                band.position.y = 0.12;
+                band.rotation.x = Math.PI / 2;
+                crownGroup.add(band);
+                
+                const pointHeight = 0.28;
+                const pointRadius = 0.06;
+                const numPoints = 6;
+                const angles = [];
+                for (let i = 0; i < numPoints; i++) {
+                    angles.push((Math.PI * 2 / numPoints) * i);
+                }
+                
+                angles.forEach((angle) => {
+                    const pointGeometry = new THREE.ConeGeometry(pointRadius, pointHeight, 8);
+                    const point = new THREE.Mesh(pointGeometry, queenBaseMaterial.clone());
+                    const radius = 0.22;
+                    point.position.x = Math.cos(angle) * radius;
+                    point.position.z = Math.sin(angle) * radius;
+                    point.position.y = 0.12 + pointHeight / 2;
+                    point.rotation.y = angle + Math.PI / 2;
+                    crownGroup.add(point);
+                });
+                
+                const gemGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+                const gem = new THREE.Mesh(gemGeometry, queenGemMaterial.clone());
+                gem.position.y = 0.12 + pointHeight + 0.1;
+                crownGroup.add(gem);
+                
+                angles.forEach((angle) => {
+                    const smallGemGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+                    const smallGem = new THREE.Mesh(smallGemGeometry, queenGemMaterial.clone());
+                    const radius = 0.22;
+                    smallGem.position.x = Math.cos(angle) * radius;
+                    smallGem.position.z = Math.sin(angle) * radius;
+                    smallGem.position.y = 0.12 + pointHeight * 0.7;
+                    crownGroup.add(smallGem);
+                });
+                
+                return crownGroup;
+            }
+            
+            queens.forEach(queen => {
+                const crown = createCrownMesh();
+                const baseX = queen.x + 0.5 - n/2;
+                const baseY = queen.y + 0.5 - n/2 - 0.15;
+                const baseZ = queen.z + 0.5 - n/2;
+                crown.position.set(baseX, baseY, baseZ);
+                scene.add(crown);
+                queenMeshes.push(crown);
+                originalPositions.set(crown, { 
+                    x: baseX, 
+                    y: baseY, 
+                    z: baseZ,
+                    cellX: queen.x,
+                    cellY: queen.y,
+                    cellZ: queen.z
+                });
+            });
+            
+            // Calculer la distance optimale pour que le cube remplisse bien la fenêtre
+            // Le cube va de -n/2 à n/2 dans chaque dimension, donc sa taille totale est n
+            const cubeSize = n;
+            const fov = camera.fov * (Math.PI / 180); // Convertir en radians
+            const container = document.getElementById('canvas-container');
+            const height = container.clientHeight;
+            // Distance pour que le cube occupe 35% de la vue
+            // Si on veut 35%, on multiplie par (1 / 0.35) = environ 2.86
+            const distance = (cubeSize / 2) / Math.tan(fov / 2) * 2.86;
+            
+            // Positionner la caméra à une distance optimale (vue en angle)
+            camera.position.set(distance * 0.7, distance * 0.7, distance * 0.7);
+            camera.lookAt(0, 0, 0);
+            
+            // Ajuster aussi les limites du zoom
+            const minDistance = distance * 0.3;
+            const maxDistance = distance * 4;
+            
+            // Mettre à jour les limites de zoom globales
+            if (window.updateZoomLimits) {
+                window.updateZoomLimits(minDistance, maxDistance);
+            }
+            
+            const slicePositionSlider = document.getElementById('slice-position');
+            slicePositionSlider.max = n - 1;
+            slicePositionSlider.value = 0;
+            document.getElementById('slice-position-value').textContent = '0';
+            
+            applySlice();
+        }
+        
+        function applySlice() {
+            if (!currentData) {
+                return;
+            }
+            
+            if (!sliceMode.enabled) {
+                originalPositions.forEach((pos, mesh) => {
+                    if (mesh instanceof THREE.Mesh || mesh instanceof THREE.Group) {
+                        mesh.position.set(pos.x, pos.y, pos.z);
+                    }
+                });
+                return;
+            }
+            
+            const n = currentData.n;
+            const plane = sliceMode.plane;
+            const slicePos = sliceMode.position;
+            const offset = sliceMode.offset;
+            
+            originalPositions.forEach((originalPos, mesh) => {
+                if (mesh instanceof THREE.Mesh || mesh instanceof THREE.Group) {
+                    let newPos = { ...originalPos };
+                    
+                    const cellX = originalPos.cellX;
+                    const cellY = originalPos.cellY;
+                    const cellZ = originalPos.cellZ;
+                    
+                    if (plane === 'XY') {
+                        if (cellZ < slicePos) {
+                            newPos.z = originalPos.z - offset;
+                        } else if (cellZ > slicePos) {
+                            newPos.z = originalPos.z + offset;
+                        }
+                    } else if (plane === 'XZ') {
+                        if (cellY < slicePos) {
+                            newPos.y = originalPos.y - offset;
+                        } else if (cellY > slicePos) {
+                            newPos.y = originalPos.y + offset;
+                        }
+                    } else if (plane === 'YZ') {
+                        if (cellX < slicePos) {
+                            newPos.x = originalPos.x - offset;
+                        } else if (cellX > slicePos) {
+                            newPos.x = originalPos.x + offset;
+                        }
+                    }
+                    
+                    mesh.position.set(newPos.x, newPos.y, newPos.z);
+                }
+            });
+        }
+        
+        // Modal controls
+        const modalOverlay = document.getElementById('modal-overlay');
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const closeModalBtn2 = document.getElementById('close-modal-btn-2');
+        
+        openModalBtn.addEventListener('click', () => {
+            modalOverlay.classList.add('show');
+        });
+        
+        closeModalBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('show');
+        });
+        
+        closeModalBtn2.addEventListener('click', () => {
+            modalOverlay.classList.remove('show');
+        });
+        
+        // Close modal when clicking outside
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('show');
+            }
+        });
+        
+        // MCMC form submission
+        document.getElementById('mcmc-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Close modal
+            modalOverlay.classList.remove('show');
+            
+            const boardSize = parseInt(document.getElementById('mcmc-board-size').value);
+            const numIterations = parseInt(document.getElementById('mcmc-iterations').value);
+            const betaFunc = document.getElementById('mcmc-beta').value;
+            const acceptanceFunc = document.getElementById('mcmc-acceptance').value;
+            
+            const runBtn = document.getElementById('run-mcmc-btn');
+            const stopBtn = document.getElementById('stop-mcmc-btn');
+            const statusDiv = document.getElementById('mcmc-status');
+            const statusText = document.getElementById('mcmc-status-text');
+            
+            runBtn.disabled = true;
+            stopBtn.style.display = 'block';
+            statusDiv.classList.add('show');
+            statusText.textContent = 'Starting MCMC...';
+            
+            if (mcmcAbortController) {
+                mcmcAbortController.abort();
+            }
+            
+            mcmcAbortController = new AbortController();
+            
+            try {
+                const response = await fetch('/run_mcmc', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        board_size: boardSize,
+                        num_iterations: numIterations,
+                        beta_func: betaFunc,
+                        acceptance_func: acceptanceFunc
+                    }),
+                    signal: mcmcAbortController.signal
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) {
+                        break;
+                    }
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const jsonStr = line.substring(6);
+                                const data = JSON.parse(jsonStr);
+                                
+                                if (data.type === 'start') {
+                                    isComputing = true;
+                                    resetEnergyChart();
+                                    statusText.textContent = `Running... (${data.num_iterations.toLocaleString()} iterations)`;
+                                    renderEmptyCube(data.board_size);
+                                } else if (data.type === 'progress') {
+                                    statusText.textContent = `Iteration: ${data.iteration.toLocaleString()} | Energy: ${data.energy} | β: ${data.beta.toFixed(4)}`;
+                                    
+                                    // Mettre à jour le graphique d'énergie
+                                    updateEnergyChart(data.iteration, data.energy);
+                                    
+                                    if (data.visualization) {
+                                        const now = Date.now();
+                                        
+                                        // Throttling : limiter les mises à jour (doublé pour ralentir)
+                                        if (now - lastUpdateTime < UPDATE_THROTTLE_MS) {
+                                            // Mettre en queue pour traitement différé
+                                            updateQueue.push(data.visualization);
+                                            
+                                            // Traiter la queue de manière asynchrone
+                                            if (!isUpdating) {
+                                                isUpdating = true;
+                                                requestAnimationFrame(() => {
+                                                    if (updateQueue.length > 0) {
+                                                        const latestData = updateQueue[updateQueue.length - 1];
+                                                        updateQueue = [];
+                                                        
+                                                        // Essayer d'abord une mise à jour optimisée
+                                                        if (!updateQueensOnly(latestData.queens, latestData.n)) {
+                                                            // Si ça échoue, faire un rendu complet
+                                                            renderVisualization(latestData);
+                                                        }
+                                                    }
+                                                    isUpdating = false;
+                                                    lastUpdateTime = Date.now();
+                                                });
+                                            }
+                                        } else {
+                                            // Mise à jour immédiate
+                                            lastUpdateTime = now;
+                                            
+                                            // Essayer d'abord une mise à jour optimisée
+                                            if (!updateQueensOnly(data.visualization.queens, data.visualization.n)) {
+                                                // Si ça échoue, faire un rendu complet
+                                                renderVisualization(data.visualization);
+                                            }
+                                        }
+                                    }
+                                } else if (data.type === 'complete') {
+                                    isComputing = false;
+                                    statusText.textContent = `Complete! Energy: ${data.final_energy} | Iterations: ${data.total_iterations.toLocaleString()}`;
+                                    
+                                    // Mettre à jour le graphique avec la dernière valeur
+                                    if (data.total_iterations > 0) {
+                                        updateEnergyChart(data.total_iterations, data.final_energy);
+                                    }
+                                    
+                                    if (data.visualization) {
+                                        renderVisualization(data.visualization);
+                                    }
+                                    
+                                    mcmcAbortController = null;
+                                    runBtn.disabled = false;
+                                    stopBtn.style.display = 'none';
+                                    return;
+                                } else if (data.type === 'error') {
+                                    statusText.textContent = `Error: ${data.message}`;
+                                    mcmcAbortController = null;
+                                    runBtn.disabled = false;
+                                    stopBtn.style.display = 'none';
+                                    return;
+                                }
+            } catch (error) {
+                                console.error('Error parsing SSE data:', error);
+                                statusText.textContent = `Error parsing data: ${error.message}`;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                isComputing = false;
+                if (error.name === 'AbortError') {
+                    statusText.textContent = 'Stopped by user.';
+                } else {
+                    console.error('MCMC error:', error);
+                    statusText.textContent = `Error: ${error.message}`;
+                }
+                mcmcAbortController = null;
+                runBtn.disabled = false;
+                stopBtn.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('stop-mcmc-btn').addEventListener('click', () => {
+            isComputing = false;
+            if (mcmcAbortController) {
+                mcmcAbortController.abort();
+                mcmcAbortController = null;
+            }
+            document.getElementById('run-mcmc-btn').disabled = false;
+            document.getElementById('stop-mcmc-btn').style.display = 'none';
+            const statusText = document.getElementById('mcmc-status-text');
+            if (statusText) {
+                statusText.textContent = 'Stopped by user.';
+            }
+        });
+        
+        function initEnergyChart() {
+            const ctx = document.getElementById('energy-chart').getContext('2d');
+            energyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Energy',
+                        data: [],
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#ccc'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Iteration',
+                                color: '#ccc'
+                            },
+                            ticks: {
+                                color: '#ccc'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Energy',
+                                color: '#ccc'
+                            },
+                            ticks: {
+                                color: '#ccc'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateEnergyChart(iteration, energy) {
+            if (!energyChart) return;
+            
+            energyData.iterations.push(iteration);
+            energyData.energies.push(energy);
+            
+            // Garder seulement les 1000 derniers points pour performance
+            if (energyData.iterations.length > 1000) {
+                energyData.iterations.shift();
+                energyData.energies.shift();
+            }
+            
+            energyChart.data.labels = energyData.iterations;
+            energyChart.data.datasets[0].data = energyData.energies.map((e, i) => ({
+                x: energyData.iterations[i],
+                y: e
+            }));
+            energyChart.update('none'); // 'none' pour animation fluide
+        }
+        
+        function resetEnergyChart() {
+            energyData.iterations = [];
+            energyData.energies = [];
+            if (energyChart) {
+                energyChart.data.labels = [];
+                energyChart.data.datasets[0].data = [];
+                energyChart.update();
+            }
+        }
+        
+        function initSliceControls() {
+            const sliceEnabled = document.getElementById('slice-enabled');
+            const slicePlane = document.getElementById('slice-plane');
+            const slicePosition = document.getElementById('slice-position');
+            const slicePositionValue = document.getElementById('slice-position-value');
+            
+            if (sliceEnabled && slicePlane && slicePosition) {
+                sliceEnabled.addEventListener('change', (e) => {
+                    sliceMode.enabled = e.target.checked;
+                    slicePosition.disabled = !sliceMode.enabled;
+                    applySlice();
+                });
+                
+                slicePlane.addEventListener('change', (e) => {
+                    sliceMode.plane = e.target.value;
+                    applySlice();
+                });
+                
+                slicePosition.addEventListener('input', (e) => {
+                    sliceMode.position = parseInt(e.target.value);
+                    slicePositionValue.textContent = sliceMode.position;
+                    applySlice();
+                });
+            }
+        }
+        
+        // Energy slider toggle
+        const energySlider = document.getElementById('energy-slider');
+        const energySliderHandle = document.getElementById('energy-slider-handle');
+        
+        energySliderHandle.addEventListener('click', () => {
+            energySlider.classList.toggle('open');
+        });
+        
+        window.addEventListener('load', () => {
+            initScene();
+            initEnergyChart();
+            initSliceControls();
+            renderEmptyCube(3);
+        });
+    </script>
+</body>
+</html>

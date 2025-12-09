@@ -5,7 +5,7 @@ Definition of the MCMC Metropolis-Hastings algorithm for the 3D N^2-Queens probl
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from queens import QueenState
+from src.queens import QueenState
 
 # ============================================================================
 # ACCEPTANCE CRITERION
@@ -48,8 +48,19 @@ def constant_beta(iteration, beta_0=0.1):
 # MAIN ALGORITHM
 # ============================================================================
 
-def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponential_beta, acceptance_func=metropolis_hastings, verbose=True):
-    """Run MCMC chain for the 3D N^2-Queens problem."""
+def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponential_beta, acceptance_func=metropolis_hastings, verbose=True, progress_callback=None):
+    """Run MCMC chain for the 3D N^2-Queens problem.
+    
+    Args:
+        board_size: Size of one dimension of the 3D board
+        num_iterations: Number of MCMC iterations
+        target_energy: Target energy to stop at (default 0)
+        beta_func: Function to compute beta (inverse temperature) at each iteration
+        acceptance_func: Function to determine if a move should be accepted
+        verbose: Whether to print progress
+        progress_callback: Optional callback function called every 500 iterations.
+                          Signature: callback(iteration, queens, energy, beta, accepted_moves)
+    """
     
     state = QueenState(board_size=board_size)
     energy = state.initial_energy
@@ -79,6 +90,10 @@ def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponentia
         queens_positions.append(state.queens.copy())
         energies.append(energy)
         
+        # Call progress callback every 500 iterations
+        if progress_callback is not None and (it + 1) % 500 == 0:
+            progress_callback(it + 1, state.queens.copy(), energy, beta, accepted_moves)
+        
         if energy <= target_energy:
             if verbose:
                 pbar.write(f"✓ Solution found at iteration {it} with energy {energy}")
@@ -104,7 +119,7 @@ def mcmc_chain(board_size, num_iterations, target_energy=0, beta_func=exponentia
 def plot_results(energies, betas, accepted_moves, board_size):
     """Create comprehensive visualization of a single MCMC run."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(f'MCMC 3D N-Queens Solver (N={board_size})', fontsize=16, fontweight='bold')
+    fig.suptitle(f'MCMC 3D N-Queens Solver (N={board_size})', fontsize=1, fontweight='bold')
     
     # Energy trajectory
     ax = axes[0, 0]
