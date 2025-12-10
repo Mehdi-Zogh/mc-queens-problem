@@ -111,3 +111,16 @@ For finite computation, simulated annealing increases $\beta$ over time:
 $$\beta(t) = \beta_0 \cdot c^t$$
 
 where $c > 1$ (typically $c = 1.001$). Early iterations explore broadly; later iterations concentrate on low-energy regions.
+
+## Interactive Visualization
+
+The project includes a web-based 3D visualization that displays the MCMC algorithm in real-time. Watch queens move and see the energy evolution as the algorithm runs.
+
+To launch the visualization:
+
+```bash
+cd webapp
+python app.py
+```
+
+Then open your browser to `http://127.0.0.1:5000` and click "Start MCMC Simulation" to configure and run the algorithm. The visualization shows queen positions in a 3D cube with an energy chart.
