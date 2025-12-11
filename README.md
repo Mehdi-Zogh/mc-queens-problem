@@ -1,6 +1,6 @@
 # Solving the $3D$ $N^2$-Queens problem with MCMC
 
-This repository contains a **Monte-Carlo Markov Chain** (MCMC) implementation for solving the $3D$ $N^2$-Queens problem using the **Metropolis-Hastings** algorithm with **simulated annealing**.
+This repository contains a **Monte-Carlo Markov Chain** (MCMC) implementation for solving the $3D$ $N^2$-Queens problem using the **Metropolis-Hastings** algorithm with **simulated annealing**, alongside a web-based 3D visualization that displays the algorithm progression in real-time.
 
 ## Problem Description
 
@@ -15,19 +15,28 @@ The $3D$ $N^2$-Queens problem extends the classic $N$-Queens puzzle to $3$ dimen
     pip install -r requirements.txt
     ```
 
-2. There are two different ways to run the code.
+2. There are two different ways to launch the algorithm.
 
-    - Run the code for a single configuration (board size, number of iterations, beta function, acceptance function).
+    - You can run the code as a **Python script**. In this case, again there are two different ways to proceed.
 
-    ```bash
-    python src/mcmc.py --num_iterations <num-iterations> --board-size <board-size> --beta_func <beta-func> --acceptance_func <acceptance-func>
-    ```
+        - Run the code for a single configuration (board size, number of iterations, beta function, acceptance function).
 
-    - Get general results of our work comparing several configurations for given board sizes and number of iterations. *(Use `--help` to see all available options)*.
+            ```bash
+            python src/mcmc.py --num_iterations <num-iterations> --board-size <board-size> --beta_func <beta-func> --acceptance_func <acceptance-func>
+            ```
 
-    ```bash
-    python src/results.py --board-sizes <space-separated-board-sizes> --num-iterations <num-iterations>
-    ```
+        - Get general results of our work comparing several configurations for given board sizes and number of iterations. *(Use `--help` to see all available options)*.
+
+            ```bash
+            python src/results.py --board-sizes <space-separated-board-sizes> --num-iterations <num-iterations>
+            ```
+
+    - You can launch the web-based visualization, as a **Flask application**. This displays queen moving positions in a 3D cube, with the energy evolution as the algorithm run. After running the command below, you should open your browser to `http://127.0.0.1:5000` and click "Start MCMC Simulation" to configure and run the algorithm.
+
+        ```bash
+        cd webapp
+        python app.py
+        ```
 
 ## Approach
 
@@ -111,16 +120,3 @@ For finite computation, simulated annealing increases $\beta$ over time:
 $$\beta(t) = \beta_0 \cdot c^t$$
 
 where $c > 1$ (typically $c = 1.001$). Early iterations explore broadly; later iterations concentrate on low-energy regions.
-
-## Interactive Visualization
-
-The project includes a web-based 3D visualization that displays the MCMC algorithm in real-time. Watch queens move and see the energy evolution as the algorithm runs.
-
-To launch the visualization:
-
-```bash
-cd webapp
-python app.py
-```
-
-Then open your browser to `http://127.0.0.1:5000` and click "Start MCMC Simulation" to configure and run the algorithm. The visualization shows queen positions in a 3D cube with an energy chart.
