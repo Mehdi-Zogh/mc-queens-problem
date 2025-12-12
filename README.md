@@ -19,7 +19,7 @@ The $3D$ $N^2$-Queens problem extends the classic $N$-Queens puzzle to $3$ dimen
 
     - You can run the code as a **Python script**. In this case, again there are two different ways to proceed.
 
-        - Run the code for a single configuration (board size, number of iterations, beta function, acceptance function).
+        - Run the code for a single configuration (board size, number of iterations, beta function, acceptance function). Add `--csv_output` to save the final queen positions to a CSV file.
 
             ```bash
             python src/mcmc.py --num_iterations <num-iterations> --board-size <board-size> --beta_func <beta-func> --acceptance_func <acceptance-func>

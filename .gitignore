@@ -1,5 +1,6 @@
-# Testing results
+# Results
 results/*.png
+*.csv
 
 # macOS
 .DS_Store

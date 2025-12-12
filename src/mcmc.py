@@ -2,10 +2,11 @@
 Definition of the MCMC Metropolis-Hastings algorithm for the 3D N^2-Queens problem.
 """
 
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from src.queens import QueenState
+from queens import QueenState
 
 # ============================================================================
 # ACCEPTANCE CRITERION
@@ -174,6 +175,8 @@ if __name__ == "__main__":
     parser.add_argument("--board_size", type=int, required=True, help="Size of one dimension of the 3D board.")
     parser.add_argument("--beta_func", type=str, default="exponential", help="Beta function to use.", choices=["exponential", "linear", "constant"])
     parser.add_argument("--acceptance_func", type=str, default="metropolis", help="Acceptance function to use.", choices=["metropolis", "always_accept", "greedy"])
+    parser.add_argument("--csv_output", action="store_true", help="Output final queen positions to results.csv.")
+    
     
     args = parser.parse_args()
     beta_func = exponential_beta if args.beta_func == "exponential" else linear_beta if args.beta_func == "linear" else constant_beta
@@ -184,9 +187,21 @@ if __name__ == "__main__":
         beta_func=beta_func,
         acceptance_func=acceptance_func
     )
+    
+    if args.csv_output:
+        final_queens = queens_positions[-1]
+        with open("results.csv", "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["x", "y", "z"])
+            for queen_pos in final_queens:
+                writer.writerow(queen_pos)
+        print(f"✓ Results saved to results.csv ({len(final_queens)} queens)")
+    
     plot_results(
         energies=energies,
         betas=betas,
         accepted_moves=accepted_moves,
         board_size=args.board_size
     )
+    
+    
