@@ -6,7 +6,7 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from src.queens import QueenState
+from queens import QueenState
 
 # ============================================================================
 # ACCEPTANCE CRITERION
@@ -31,8 +31,22 @@ def greedy(delta_energy, beta):
 # TEMPERATURE SCHEDULES
 # ============================================================================
 
-def exponential_beta(iteration, beta_0=0.1, cooling_rate=1.001):
-    """β(t) = β₀ · c^t"""
+def exponential_beta(iteration, beta_0=0.1, cooling_rate=1.001, beta_max=1e40):
+    """β(t) = β₀ · c^t, capped at beta_max to prevent overflow.
+    
+    Args:
+        iteration: Current iteration number
+        beta_0: Initial inverse temperature
+        cooling_rate: Multiplicative cooling factor (>1 for cooling)
+        beta_max: Maximum beta value to prevent overflow (default 1e10)
+    """
+    
+    log_beta = np.log(beta_0) + iteration * np.log(cooling_rate)
+    log_beta_max = np.log(beta_max)
+    
+    if log_beta > log_beta_max:
+        return beta_max
+    
     return beta_0 * (cooling_rate ** iteration)
 
 

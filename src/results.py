@@ -23,7 +23,19 @@ for style in ['seaborn-v0_8-darkgrid', 'seaborn-darkgrid', 'default']:
         break
     except: 
         pass
-plt.rcParams.update({'figure.dpi': 100, 'savefig.dpi': 300, 'font.size': 11})
+plt.rcParams.update({
+    'figure.dpi': 100, 
+    'savefig.dpi': 300, 
+    'font.size': 14,
+    'font.weight': 'bold',
+    'axes.labelweight': 'bold',
+    'axes.titleweight': 'bold',
+    'axes.labelsize': 14,
+    'axes.titlesize': 15,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'legend.fontsize': 12,
+})
 
 BETA_FUNCS = {'exponential': exponential_beta, 'linear': linear_beta, 'constant': constant_beta}
 ACCEPT_FUNCS = {'metropolis': metropolis_hastings, 'greedy': greedy}
@@ -138,13 +150,16 @@ def _plot_comparison(results, filter_fn, x_fn, title, colors, save_path=None):
         return None
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    fig.suptitle(title, fontsize=14, fontweight='bold', y=0.995)
+    fig.suptitle(title, fontsize=16, fontweight='bold', y=0.995)
     
     for i, r in enumerate(results):
         avg, std = np.mean(r.energies, axis=0), np.std(r.energies, axis=0)
         ax1.plot(avg, label=x_fn(r), linewidth=2, color=colors[i], alpha=0.9)
         ax1.fill_between(range(len(avg)), avg - std, avg + std, alpha=0.2, color=colors[i])
-    ax1.set(xlabel='Iteration', ylabel='Energy', title='Energy Convergence', ylim=(0, None))
+    ax1.set_xlabel('Iteration', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('Energy', fontsize=14, fontweight='bold')
+    ax1.set_title('Energy Convergence', fontsize=15, fontweight='bold')
+    ax1.set_ylim(0, None)
     ax1.legend()
     ax1.grid(True, alpha=0.3)
     
@@ -153,7 +168,8 @@ def _plot_comparison(results, filter_fn, x_fn, title, colors, save_path=None):
     ax2.bar(range(len(results)), means, yerr=stds, color=colors[:len(results)], alpha=0.8, edgecolor='black', capsize=5)
     ax2.set_xticks(range(len(results)))
     ax2.set_xticklabels([x_fn(r) for r in results])
-    ax2.set(ylabel='Min Energy', title='Best Energy Achieved')
+    ax2.set_ylabel('Min Energy', fontsize=14, fontweight='bold')
+    ax2.set_title('Best Energy Achieved', fontsize=15, fontweight='bold')
     ax2.grid(True, alpha=0.3, axis='y')
     
     plt.tight_layout()
