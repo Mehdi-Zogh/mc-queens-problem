@@ -67,6 +67,46 @@
             transform: translateY(0);
         }
         
+        .csv-toggle-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .csv-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .csv-toggle-btn.active {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+            color: #4caf50;
+        }
+        
+        .csv-toggle-btn.active:hover {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .csv-toggle-btn::before {
+            content: '☐';
+            font-size: 1.1em;
+        }
+        
+        .csv-toggle-btn.active::before {
+            content: '☑';
+        }
+        
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -469,6 +509,14 @@
                         <option value="greedy">Greedy</option>
                     </select>
                     <small>Strategy for accepting or rejecting moves</small>
+                </div>
+                
+                <div class="modal-form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="mcmc-save-csv" style="width: auto; margin: 0;">
+                        <span>Save results to CSV file</span>
+                    </label>
+                    <small>Exports the final queen positions (x,y,z) to a CSV file at the end of the run.</small>
                 </div>
                 
                 <div class="modal-actions">
@@ -1248,6 +1296,7 @@
             const numIterations = parseInt(document.getElementById('mcmc-iterations').value);
             const betaFunc = document.getElementById('mcmc-beta').value;
             const acceptanceFunc = document.getElementById('mcmc-acceptance').value;
+            const saveCsv = document.getElementById('mcmc-save-csv')?.checked === true;
             
             const runBtn = document.getElementById('run-mcmc-btn');
             const stopBtn = document.getElementById('stop-mcmc-btn');
@@ -1275,7 +1324,8 @@
                         board_size: boardSize,
                         num_iterations: numIterations,
                         beta_func: betaFunc,
-                        acceptance_func: acceptanceFunc
+                        acceptance_func: acceptanceFunc,
+                        save_csv: saveCsv
                     }),
                     signal: mcmcAbortController.signal
                 });
@@ -1356,7 +1406,8 @@
                                     }
                                 } else if (data.type === 'complete') {
                                     isComputing = false;
-                                    statusText.textContent = `Complete! Energy: ${data.final_energy} | Iterations: ${data.total_iterations.toLocaleString()}`;
+                                    const csvMsg = data.csv_file ? ` | CSV: ${data.csv_file}` : '';
+                                    statusText.textContent = `Complete! Energy: ${data.final_energy} | Iterations: ${data.total_iterations.toLocaleString()}${csvMsg}`;
                                     
                                     // Mettre à jour le graphique avec la dernière valeur
                                     if (data.total_iterations > 0) {

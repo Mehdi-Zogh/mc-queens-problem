@@ -5,6 +5,8 @@ import sys
 import os
 import json
 import threading
+import csv
+from datetime import datetime
 
 # Add parent directory to path to import src modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -89,6 +91,7 @@ def run_mcmc():
         num_iterations = int(data.get('num_iterations', 10000))
         beta_func_name = data.get('beta_func', 'exponential')
         acceptance_func_name = data.get('acceptance_func', 'metropolis')
+        save_csv = bool(data.get('save_csv', False))
         
         # Validate input
         if board_size < 1:
@@ -154,12 +157,29 @@ def run_mcmc():
                     # Send final result
                     final_queens_0based = [(q[0] - 1, q[1] - 1, q[2] - 1) for q in final_queens[-1]]
                     final_viz_data = create_3d_visualization(board_size, final_queens_0based)
+                    csv_file = None
+                    if save_csv:
+                        # Match CLI behavior: write final queen positions (1-based) with header x,y,z
+                        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                        results_dir = os.path.join(repo_root, 'results')
+                        os.makedirs(results_dir, exist_ok=True)
+                        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"results_N{board_size}_it{num_iterations}_{ts}.csv"
+                        csv_path = os.path.join(results_dir, filename)
+                        with open(csv_path, "w", newline="") as csvfile:
+                            writer = csv.writer(csvfile)
+                            writer.writerow(["x", "y", "z"])
+                            for queen_pos in final_queens[-1]:
+                                writer.writerow(queen_pos)
+                        csv_file = os.path.relpath(csv_path, repo_root)
+
                     update_queue.put({
                         'type': 'complete',
                         'final_energy': final_energies[-1],
                         'total_iterations': len(final_energies),
                         'accepted_moves': final_accepted,
-                        'visualization': final_viz_data
+                        'visualization': final_viz_data,
+                        'csv_file': csv_file
                     })
                 except Exception as e:
                     mcmc_error[0] = str(e)
