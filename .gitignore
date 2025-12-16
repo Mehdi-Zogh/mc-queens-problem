@@ -1,6 +1,7 @@
 # Results
 results/*.png
 *.csv
+*.txt
 
 # macOS
 .DS_Store

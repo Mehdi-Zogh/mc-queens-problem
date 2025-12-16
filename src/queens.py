@@ -39,15 +39,16 @@ class QueenState:
         self.face_diagonals = [defaultdict(int) for _ in range(6)]
         self.space_diagonals = [defaultdict(int) for _ in range(4)]
         
+        energy = 0
         for queen in self.queens:
             self._update_state(queen, 1)
-            
-        collisions = 0
+            energy += abs(queen[0] + queen[1] - 2 * queen[2])
+
         for table in [self.xy_planes, self.xz_planes, self.yz_planes, *self.face_diagonals, *self.space_diagonals]:
             for value in table.values():
-                collisions += value * (value - 1) // 2
-            
-        self.initial_energy = collisions
+                energy += value * (value - 1) // 2
+        
+        self.initial_energy = energy
         
     def compute_delta_energy(self, queen_index, new_pos):
         """
@@ -58,6 +59,9 @@ class QueenState:
         self.apply_move(queen_index, new_pos)
         new_collisions = self._calculate_collisions(new_pos)
         self.apply_move(queen_index, old_pos)
+
+        old_collisions += abs(old_pos[0] + old_pos[1] - 2 * old_pos[2])
+        new_collisions += abs(new_pos[0] + new_pos[1] - 2 * new_pos[2])
         
         return new_collisions - old_collisions
     
