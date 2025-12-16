@@ -11,6 +11,9 @@ from datetime import datetime
 # Add parent directory to path to import src modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+# Also add src directory
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from visualization import create_3d_visualization
 from src.mcmc import mcmc_chain, exponential_beta, linear_beta, constant_beta, metropolis_hastings, greedy

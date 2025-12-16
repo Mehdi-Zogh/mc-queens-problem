@@ -39,28 +39,37 @@ class QueenState:
         self.face_diagonals = [defaultdict(int) for _ in range(6)]
         self.space_diagonals = [defaultdict(int) for _ in range(4)]
         
+        energy = 0
         for queen in self.queens:
             self._update_state(queen, 1)
-            
-        collisions = 0
+            if (queen[0] + queen[1] + queen[2]) % 2 == 1:
+                energy += 4
+
         for table in [self.xy_planes, self.xz_planes, self.yz_planes, *self.face_diagonals, *self.space_diagonals]:
             for value in table.values():
-                collisions += value * (value - 1) // 2
+                energy += value * (value - 1) // 2
             
-        self.initial_energy = collisions
+        self.initial_energy = energy
         
     def compute_delta_energy(self, queen_index, new_pos):
         """
         Compute the delta in energy caused by moving a queen to a new position, without modifying the state.
         """
         old_pos = self.queens[queen_index]
-        old_collisions = self._calculate_collisions(old_pos)
+        old_energy = self._calculate_collisions(old_pos)
         self.apply_move(queen_index, new_pos)
-        new_collisions = self._calculate_collisions(new_pos)
+        new_energy = self._calculate_collisions(new_pos)
         self.apply_move(queen_index, old_pos)
-        
-        return new_collisions - old_collisions
-    
+
+        if (old_pos[0] + old_pos[1] + old_pos[2]) % 2 == 1:
+            old_energy += 4
+
+        if (new_pos[0] + new_pos[1] + new_pos[2]) % 2 == 1:
+            new_energy += 4
+
+        return new_energy - old_energy  
+
+
     def apply_move(self, queen_index, new_pos):
         """
         Apply a move by moving a queen to a new position, updating all tracking structures.
